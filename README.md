@@ -1,27 +1,15 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-import os
-
-app = Flask(__name__)
-CORS(app)
-
-@app.route("/")
-def home():
-    return "Crack Detection API Running Successfully"
-
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
-        # Try getting file with key "file"
-        upload = request.files.get('file')
+        if len(request.files) == 0:
+            return jsonify({"error": "No file received"})
 
-        if upload is None:
-            return jsonify({"error": "No file received"}), 400
-        
-        # Save file temporarily
+        # Get first uploaded file (any key name)
+        upload = list(request.files.values())[0]
+
+        os.makedirs("uploads", exist_ok=True)
         upload.save(os.path.join("uploads", upload.filename))
 
-        # For now, send dummy result
         return jsonify({
             "Crack_Type": "Flexural Crack",
             "Crack_Length_mm": 120,
@@ -29,6 +17,8 @@ def predict():
             "Safety_Status": "Moderate Risk"
         })
 
+    except Exception as e:
+        return jsonify({"error": str(e)})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
